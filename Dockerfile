@@ -1,10 +1,13 @@
 FROM alpine:3.20
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl busybox-extras
 
 # 非rootユーザー・グループ作成
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-USER appuser
+RUN mkdir -p /www && chown -R appuser:appgroup /www
 
-CMD [ "sleep", "infinity" ]
+USER appuser
+WORKDIR /www
+
+CMD ["sh", "-c", "echo \"Hello from $(hostname)\" > /www/index.html && httpd -f -p 80 -h /www"]
