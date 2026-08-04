@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py .
+COPY --chown=appuser:appgroup app.py private.pem public.pem ./
 
 USER appuser
 EXPOSE 5000

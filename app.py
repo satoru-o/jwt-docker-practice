@@ -6,11 +6,14 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "dev-secret-change-me")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 5  # 5分(動作確認しやすいように短め)
+with open("private.pem", "rb") as f:
+    PRIVATE_KEY = f.read()
+with open("public.pem", "rb") as f:
+    PUBLIC_KEY = f.read()
 
-# デモ用のダミーユーザーDB(本番なら当然ハッシュ化 + 本物のDBを使う)
+ALGORITHM = "RS256"
+ACCESS_TOKEN_EXPIRE_SECONDS = 60 * 5
+
 USERS = {
     "alice": "wonderland",
 }
@@ -36,7 +39,8 @@ def login():
         "iat": now,
         "exp": now + timedelta(seconds=ACCESS_TOKEN_EXPIRE_SECONDS),
     }
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    # 発行(署名)は秘密鍵で行う
+    token = jwt.encode(payload, PRIVATE_KEY, algorithm=ALGORITHM)
     return jsonify({"access_token": token, "expires_in": ACCESS_TOKEN_EXPIRE_SECONDS})
 
 
@@ -49,7 +53,8 @@ def protected():
     token = auth_header.removeprefix("Bearer ").strip()
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # 検証は公開鍵で行う
+        payload = jwt.decode(token, PUBLIC_KEY, algorithms=[ALGORITHM])
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "token expired"}), 401
     except jwt.InvalidTokenError as e:
