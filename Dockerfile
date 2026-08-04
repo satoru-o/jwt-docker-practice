@@ -1,13 +1,15 @@
-FROM alpine:3.20
+FROM python:3.12-alpine
 
-RUN apk add --no-cache curl busybox-extras
-
-# 非rootユーザー・グループ作成
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-RUN mkdir -p /www && chown -R appuser:appgroup /www
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py .
 
 USER appuser
-WORKDIR /www
+EXPOSE 5000
 
-CMD ["sh", "-c", "echo \"Hello from $(hostname)\" > /www/index.html && httpd -f -p 80 -h /www"]
+CMD ["python", "app.py"]
