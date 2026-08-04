@@ -1,0 +1,16 @@
+services:
+  issuer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: issuer
+    ports:
+      - "5000:5000"
+  
+  verifier:
+    build:
+      context: .
+      dockerfile: Dockerfile.verifier
+    container_name: verifier
+    ports:
+      - "5001:5001"
